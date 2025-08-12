@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Velha PRO 😏</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #tabuleiro { display: grid; grid-template-columns: repeat(3, 80px); gap: 5px; justify-content: center; margin: 20px auto; }
+        .casa { width: 80px; height: 80px; font-size: 2.5em; cursor: pointer; background: #f0f0f0; border: 2px solid #888; }
+        #placar { font-size: 1.2em; margin: 10px; }
+        #mensagem { margin: 10px; font-weight: bold; }
+        #reiniciar { margin: 15px; padding: 8px 20px; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Jogo da Velha PRO 😏</h1>
+    <div id="placar">Placar - X: <span id="pX">0</span> O: <span id="pO">0</span></div>
+    <div id="mensagem"></div>
+    <div id="tabuleiro"></div>
+    <button id="reiniciar">Reiniciar</button>
+
+    <script>
+        let tabuleiro = ["", "", "", "", "", "", "", "", ""];
+        let jogador = "X";
+        let placar = { X: 0, O: 0 };
+        const casas = [];
+        const placarX = document.getElementById("pX");
+        const placarO = document.getElementById("pO");
+        const mensagem = document.getElementById("mensagem");
+        const tabuleiroDiv = document.getElementById("tabuleiro");
+
+        function criarTabuleiro() {
+            tabuleiroDiv.innerHTML = "";
+            casas.length = 0;
+            for (let i = 0; i < 9; i++) {
+                const btn = document.createElement("button");
+                btn.className = "casa";
+                btn.textContent = tabuleiro[i];
+                btn.onclick = () => jogar(i);
+                tabuleiroDiv.appendChild(btn);
+                casas.push(btn);
+            }
+        }
+
+        function verificarVitoria() {
+            const c = tabuleiro;
+            const comb = [
+                [0,1,2],[3,4,5],[6,7,8],
+                [0,3,6],[1,4,7],[2,5,8],
+                [0,4,8],[2,4,6]
+            ];
+            for (let linha of comb) {
+                if (c[linha[0]] && c[linha[0]] === c[linha[1]] && c[linha[1]] === c[linha[2]]) {
+                    return c[linha[0]];
+                }
+            }
+            return null;
+        }
+
+        function verificarEmpate() {
+            return tabuleiro.every(c => c !== "");
+        }
+
+        function jogadaPC() {
+            // Tenta ganhar
+            for (let i = 0; i < 9; i++) {
+                if (tabuleiro[i] === "") {
+                    tabuleiro[i] = "O";
+                    if (verificarVitoria() === "O") {
+                        tabuleiro[i] = "";
+                        return i;
+                    }
+                    tabuleiro[i] = "";
+                }
+            }
+            // Tenta bloquear
+            for (let i = 0; i < 9; i++) {
+                if (tabuleiro[i] === "") {
+                    tabuleiro[i] = "X";
+                    if (verificarVitoria() === "X") {
+                        tabuleiro[i] = "";
+                        return i;
+                    }
+                    tabuleiro[i] = "";
+                }
+            }
+            // Aleatório
+            const livres = tabuleiro.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return livres[Math.floor(Math.random() * livres.length)];
+        }
+
+        function jogar(pos) {
+            if (tabuleiro[pos] || verificarVitoria()) return;
+            tabuleiro[pos] = jogador;
+            casas[pos].textContent = jogador;
+            casas[pos].disabled = true;
+
+            let vencedor = verificarVitoria();
+            if (vencedor) {
+                mensagem.textContent = `🎉 Jogador ${vencedor} venceu!`;
+                placar[vencedor]++;
+                atualizarPlacar();
+                desabilitarTabuleiro();
+            } else if (verificarEmpate()) {
+                mensagem.textContent = "😐 Deu velha!";
+                desabilitarTabuleiro();
+            } else {
+                jogador = jogador === "X" ? "O" : "X";
+                mensagem.textContent = `Vez do jogador ${jogador}`;
+                if (jogador === "O") {
+                    setTimeout(() => {
+                        let posPC = jogadaPC();
+                        jogar(posPC);
+                    }, 500);
+                }
+            }
+        }
+
+        function desabilitarTabuleiro() {
+            casas.forEach(btn => btn.disabled = true);
+        }
+
+        function atualizarPlacar() {
+            placarX.textContent = placar.X;
+            placarO.textContent = placar.O;
+        }
+
+        function reiniciar() {
+            tabuleiro = ["", "", "", "", "", "", "", "", ""];
+            jogador = "X";
+            mensagem.textContent = `Vez do jogador ${jogador}`;
+            criarTabuleiro();
+        }
+
+        document.getElementById("reiniciar").onclick = reiniciar;
+
+        // Inicialização
+        criarTabuleiro();
+        mensagem.textContent = `Vez do jogador ${jogador}`;
+    </script>
+</body>
+</html>
